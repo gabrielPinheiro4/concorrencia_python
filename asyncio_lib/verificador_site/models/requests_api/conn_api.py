@@ -16,16 +16,21 @@ class ConnApi:
             *endpoints
         ):
 
+        is_get = type_method == 'GET'
+
         endpoints_str = '' if endpoints else None
 
         if endpoints:
             for endpoint in endpoints:
                 endpoints_str = endpoints_str + f'/{endpoint}'
 
-        headers =  {'API-Key':self.api_key, 'Content-Type': content_type}
+        headers = (
+            {'API-Key':self.api_key, 'Content-Type': content_type}
+            if not is_get else {}
+        )
 
         request = Request(
-            url=self.api if not endpoints else f'{self.api}/{endpoints_str}',
+            url=self.api if not endpoints else f'{self.api}{endpoints_str}',
             data=bytes(dumps(data), encoding='utf-8'),
             headers=headers,
             method=type_method

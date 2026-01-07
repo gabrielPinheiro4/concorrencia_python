@@ -5,6 +5,7 @@ from models.loop.loop_input import LoopInput
 from models.input.input import Input
 from models.requests_api.conn_api import ConnApi
 from models.loop.loop_tasks import LoopTasks
+from models.sites.sites import Sites
 from consts.phrases import INPUT_PHRASE
 
 
@@ -29,17 +30,28 @@ class Main:
                 {
                     'func': conn.request,
 
-                    'args': ('POST', {'url': f'https://{site}', 'visibility': 'public'})
+                    'args': ('POST', {'url': f'https://{site}', 'visibility': 'public'}, 'application/json', 'scan')
                 }
 
                 for site in sites_to_verify
             ]
 
-            tasks_to_execute = await LoopTasks.create_tasks(sites_to_verify)
+            sites_uuid = await LoopTasks.execute_tasks(sites_to_verify)
 
-            tasks_responses = await LoopTasks.execute_tasks(tasks_to_execute)
+            sites_response = [
+                {
+                    'func': conn.request,
+                    'args': ('GET', None, 'application/json', 'result', f'{site.get('uuid')}')
+                }
 
-            breakpoint()
+                for site in sites_uuid
+            ]
+
+            result = await LoopTasks.execute_tasks(sites_response)
+
+            sites = Sites(result)
+
+            sites.verify_sites()
 
 
 if __name__ == '__main__':

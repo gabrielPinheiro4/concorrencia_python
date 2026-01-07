@@ -1,26 +1,13 @@
-from asyncio import create_task, to_thread
+from asyncio import create_task, to_thread, gather
 
 
 class LoopTasks:
 
     @staticmethod
-    async def create_tasks(funcs):
+    async def execute_tasks(funcs):
 
-        tasks_awaitable = []
+        tasks_awaitable = [
+            create_task(to_thread(func.get('func'), *func.get('args'))) for func in funcs
+        ]
 
-        for func in funcs:
-            tasks_awaitable.append(
-                create_task(to_thread(func.get('func'), *func.get('args')))
-            )
-
-        return tasks_awaitable
-
-    @staticmethod
-    async def execute_tasks(tasks):
-
-        results = []
-
-        for task in tasks:
-            results.append(await task)
-
-        return results
+        return await gather(*tasks_awaitable, return_exceptions=True)
